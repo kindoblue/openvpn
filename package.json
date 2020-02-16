@@ -1,0 +1,14 @@
+{
+  "name": "openvpn",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "jest --watchAll"
+  },
+  "dependencies": {
+    "telnet": "kindoblue/telnet"
+  },
+  "devDependencies": {
+    "jest": "^25.1.0",
+    "prettier": "^1.19.1"
+  }
+}
