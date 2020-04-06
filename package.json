@@ -1,11 +1,12 @@
 {
-  "name": "openvpn",
+  "name": "@kindoblue/openvpn",
   "version": "1.0.0",
+  "main": "index.js",
   "scripts": {
     "test": "jest --watchAll"
   },
   "dependencies": {
-    "telnet": "kindoblue/telnet"
+    "@kindoblue/telnet": "*"
   },
   "devDependencies": {
     "jest": "^25.2.7",
