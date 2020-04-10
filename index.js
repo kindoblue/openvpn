@@ -15,7 +15,7 @@ function OpenVPNManager(telnetClient) {
 }
 
 function request(client, method, param) {
-  return new Promise(function(resolve, reject) {
+  return new Promise(function (resolve, reject) {
     client.on("data", function listener(data) {
       const str = data.toString();
       let timer;
@@ -38,8 +38,13 @@ function request(client, method, param) {
       } else {
         if (data.toString().startsWith("SUCCESS")) {
           console.debug("waiting for remote");
-          timer = setTimeout(reject, 5000);
-        } else reject();
+          timer = setTimeout(
+            () => reject("REMOTE state not reached within 5 secs"),
+            5000
+          );
+        } else {
+          reject(`command ${method} failed`);
+        }
       }
     });
 
@@ -47,41 +52,44 @@ function request(client, method, param) {
   });
 }
 
-OpenVPNManager.prototype.connect = function(params) {
+OpenVPNManager.prototype.connect = function (params) {
   return request(this.telnet, "connect", params);
 };
 
-OpenVPNManager.prototype.release = function(params) {
+OpenVPNManager.prototype.release = function (params) {
   return request(this.telnet, "write", "hold release\r\n");
 };
 
-OpenVPNManager.prototype.sendSignal = function(params) {
+OpenVPNManager.prototype.sendSignal = function (params) {
   return request(this.telnet, "write", "signal SIGUSR1\r\n");
 };
 
-OpenVPNManager.prototype.setReady = function(option) {
+OpenVPNManager.prototype.setReady = function (option) {
   const self = this;
-  let state = self.connect(option)
-      .then(() => self.release())
-      .catch(() => self.sendSignal());
+  let state = self
+    .connect(option)
+    .then(() => self.release())
+    .catch(() => self.sendSignal().then(() => self.release()));
   return state;
-}
+};
 
-OpenVPNManager.prototype.setServer = function(ip, port) {
+OpenVPNManager.prototype.setServer = function (ip, port) {
   const self = this;
-  return new Promise(function(resolve, reject) {
-    self.telnet.once("data", function(data) {
+  return new Promise(function (resolve, reject) {
+    self.telnet.once("data", function (data) {
       const str = data.toString();
 
-      if (data.toString().startsWith("SUCCESS")) {
+      if (str.startsWith("SUCCESS")) {
         resolve("SUCCESS");
-      } else reject();
+      } else {
+        reject("remote MOD command failed");
+      }
     });
 
     self.telnet.write(`remote MOD ${ip} ${port}\r\n`);
   });
 };
 
-module.exports.create = function(telnetClient) {
+module.exports.create = function (telnetClient) {
   return new OpenVPNManager(telnetClient);
 };
