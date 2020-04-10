@@ -55,11 +55,19 @@ OpenVPNManager.prototype.release = function(params) {
   return request(this.telnet, "write", "hold release\r\n");
 };
 
-OpenVPNManager.prototype.send_signal = function(params) {
+OpenVPNManager.prototype.sendSignal = function(params) {
   return request(this.telnet, "write", "signal SIGUSR1\r\n");
 };
 
-OpenVPNManager.prototype.set_server = function(ip, port) {
+OpenVPNManager.prototype.setReady = function(option) {
+  const self = this;
+  let state = self.connect(option)
+      .then(() => self.release())
+      .catch(() => self.sendSignal());
+  return state;
+}
+
+OpenVPNManager.prototype.setServer = function(ip, port) {
   const self = this;
   return new Promise(function(resolve, reject) {
     self.telnet.once("data", function(data) {
